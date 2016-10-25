@@ -16,7 +16,7 @@ namespace Potentiostat
             Vp = 4.91;
             Vn = -4.75;
             CurrentSenseDivider = new VoltageDivider(Vp, 10000.0, 9980.0);
-            WEVoltSenseDivider = new VoltageDivider(Vp, 9980, 9970);
+            WEVoltSenseDivider = new VoltageDivider(Vp, 9980.0, 9970.0);
         }
 
         private void AddShunts()
@@ -49,8 +49,19 @@ namespace Potentiostat
         {
             var CurrentRange = GetCurrentRange();
             var factor = Vp/(Vp - Vn);
-            return (CurrentRange.Item2 - CurrentRange.Item1) / 1023 / factor;
+            return (CurrentRange.Item2 - CurrentRange.Item1) / 1023.0 / factor;
         }
+        public double GetVoltage(int AnalogValue)
+        {
+            var E = AnalogValue / 1023.0 * Vp;
+            return -WEVoltSenseDivider.GetVIn(E);
+        }
+        public double GetCurrent(int AnalogValue)
+        {
+            var E = AnalogValue / 1023.0 * Vp;
+            var Ereal = CurrentSenseDivider.GetVIn(E);
+            return Ereal / GetShuntResistance();
 
+        }
     }
 }
