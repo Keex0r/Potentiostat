@@ -17,6 +17,7 @@ namespace Potentiostat
             Vn = -4.75;
             CurrentSenseDivider = new VoltageDivider(Vp, 10000.0, 9980.0);
             WEVoltSenseDivider = new VoltageDivider(Vp, 9980.0, 9970.0);
+            Averaging = 15;
         }
 
         private void AddShunts()
@@ -37,6 +38,7 @@ namespace Potentiostat
         public double Vn;
         public VoltageDivider CurrentSenseDivider;
         public VoltageDivider WEVoltSenseDivider;
+        public int Averaging;
 
         public Tuple<double,double> GetCurrentRange()
         {

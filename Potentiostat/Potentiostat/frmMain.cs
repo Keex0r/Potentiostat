@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.IO;
 using System.IO.Ports;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace Potentiostat
 {
@@ -17,17 +18,28 @@ namespace Potentiostat
     {
 
         public BindingSource bdsShunts;
-        private DateTime LastUpdate = DateTime.Now;
-        private int LastWE=0;
-        private int LastCurrent=0;
         private SerialPort Port;
         private int Buffer = 0;
-        private event EventHandler ValuesChanged;
         private System.Threading.CancellationTokenSource CancelListen;
         private int TotalUpdates = 0;
+        private string LogPath;
+        private bool DoLog;
+
+        private Queue<Misc.RawDataPoint> Data;
+        private Queue<Tuple<double,double,double>> AverageBuffer;
+
         public frmMain()
         {
             InitializeComponent();
+            tbCOM.Text = Potentiostat.Properties.Settings.Default.COM;
+            numBaud.Value = Potentiostat.Properties.Settings.Default.Baud;
+            tbLogPath.Text = Potentiostat.Properties.Settings.Default.LogPath;
+
+            chart1.Series.LinePenDefaultWidthY1 = 3;
+            chart1.Series.LinePenDefaultWidthY2 = 3;
+            chart1.Series.AddSeries(jwGraph.jwGraph.Series.enumSeriesType.Line, jwGraph.jwGraph.Axis.enumAxisLocation.Primary).Name = "Volt";
+            chart1.Series.AddSeries(jwGraph.jwGraph.Series.enumSeriesType.Line, jwGraph.jwGraph.Axis.enumAxisLocation.Secondary).Name = "Current";
+
             bdsShunts = new BindingSource();
             bdsShunts.DataSource = Program.Settings.Shunts;
             dataGridView1.AutoGenerateColumns = true;
@@ -38,31 +50,10 @@ namespace Potentiostat
             dataGridView1.CurrentCellDirtyStateChanged += DataGridView1_CurrentCellDirtyStateChanged;
             dataGridView1.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
             dataGridView1.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            ValuesChanged += FrmMain_ValuesChanged;
+            Data = new Queue<Misc.RawDataPoint>();
+            AverageBuffer = new  Queue<Tuple<double,double, double>>();
         }
 
-        private void FrmMain_ValuesChanged(object sender, EventArgs e)
-        {
-            UpdateValueDisplay();
-        }
-        private void UpdateValueDisplay()
-        {
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new Action(() => UpdateValueDisplay()));
-                return;
-            }
-            lblVoltage.Text = NumberToString(Program.Settings.GetVoltage(LastWE), "V");
-            lblCurrent.Text = NumberToString(Program.Settings.GetCurrent(LastCurrent), "A");
-            tslBuffer.Text = Buffer.ToString();
-            tslUpdates.Text = TotalUpdates.ToString();
-            chart1.Series["Volt"].Points.AddXY(LastUpdate, Program.Settings.GetVoltage(LastWE));
-            chart1.Series["Current"].Points.AddXY(LastUpdate, Program.Settings.GetCurrent(LastCurrent));
-            if (chart1.Series["Volt"].Points.Count() > 5000) chart1.Series["Volt"].Points.RemoveAt(0);
-            if (chart1.Series["Current"].Points.Count() > 5000) chart1.Series["Current"].Points.RemoveAt(0);
-            chart1.ChartAreas[0].AxisX.Minimum = chart1.Series["Volt"].Points.First().XValue;
-            chart1.ChartAreas[0].AxisX.Maximum = chart1.Series["Volt"].Points.Last().XValue ;
-        }
         private void DataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
             if (dataGridView1.IsCurrentCellDirty)
@@ -90,38 +81,98 @@ namespace Potentiostat
             btnDisconnect.Enabled = true;
             CancelListen = new System.Threading.CancellationTokenSource();
             TotalUpdates = 0;
-            int queuelength = 15;
-            await Task.Run(new Action(() =>
+            chart1.Series["Volt"].ClearData();
+            chart1.Series["Current"].ClearData();
+            Data.Clear();
+            AverageBuffer.Clear();
+            tmrUpdate.Start();
+            try
             {
-                var rx = new Regex("E(\\d+)I(\\d+)");
-                var EQueue = new Queue<int>();
-                var IQueue = new Queue<int>();
-                do
+                await Task.Run(new Action(() =>
                 {
-                    var line = Port.ReadLine();
-                    if (!rx.IsMatch(line)) continue;
-                    var match = rx.Match(line);
-                    var thisE = int.Parse(match.Groups[1].Value);
-                    var thisI = int.Parse(match.Groups[2].Value);
-                    EQueue.Enqueue(thisE);
-                    IQueue.Enqueue(thisI);
-                    if (EQueue.Count() > queuelength) EQueue.Dequeue();
-                    if (IQueue.Count() > queuelength) IQueue.Dequeue();
-                    LastWE = (int)EQueue.Average();
-                    LastCurrent = (int)IQueue.Average();
-                    LastUpdate = DateTime.Now;
-                    Buffer = Port.BytesToRead;
-                    TotalUpdates++;
-                    if (ValuesChanged != null) ValuesChanged(this, new EventArgs());
-                    Port.BaseStream.Flush();
-                   Port.DiscardInBuffer();
-                } while (!CancelListen.IsCancellationRequested);
-            }));
-            Port.Close();
+                    var rx = new Regex("m(\\d+)u(\\d+)E(\\d+)I(\\d+)");
+                    Port.DiscardInBuffer();
+                    int fails = 0;
+                    Port.ReadTimeout = 10000;
+                    do
+                    {
+                        var line = Port.ReadLine();
+                        if (!rx.IsMatch(line))
+                        {
+                            fails++;
+                            if (fails > 10) throw new Exception("No matching text. Baudrate wrong?");
+                            continue;
+                        }
+                        fails = 0;
+                        var match = rx.Match(line);
+                        var thisMilli = ulong.Parse(match.Groups[1].Value);
+                        var thisMicro = ulong.Parse(match.Groups[2].Value);
+                        var thisE = int.Parse(match.Groups[3].Value);
+                        var thisI = int.Parse(match.Groups[4].Value);
+                        HandleNewValues(thisMilli, thisMicro, thisE, thisI);
+                        Buffer = Port.BytesToRead;
+                    } while (!CancelListen.IsCancellationRequested);
+                }));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Loop error: " + ex.Message);
+            }
+            try
+            {
+                Port.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error closing serial port: " + ex.Message);
+            }
+            tmrUpdate.Stop();
+
             btnConnect.Enabled = true;
             tbCOM.Enabled = true;
             numBaud.Enabled = true;
             btnDisconnect.Enabled = false;
+        }
+        private async void SimConnect(int Wait)
+        {
+            btnConnect.Enabled = false;
+            tbCOM.Enabled = false;
+            numBaud.Enabled = false;
+            btnDisconnect.Enabled = true;
+            CancelListen = new System.Threading.CancellationTokenSource();
+            TotalUpdates = 0;
+            tmrUpdate.Start();
+            chart1.Series["Volt"].ClearData();
+            chart1.Series["Current"].ClearData();
+            var starttime = DateTime.Now;
+            await Task.Run(new Action(() =>
+            {
+                do
+                {
+                    var thisE = (int)(1023 * Math.Sin(DateTime.Now.Millisecond / 1000.0 * 2 * Math.PI));
+                    var thisI = (int)(1023 * Math.Cos(DateTime.Now.Millisecond / 1000.0 * 2 * Math.PI));
+                    var milli = (ulong)((DateTime.Now - starttime).TotalMilliseconds);
+                    HandleNewValues(milli, 0, thisE, thisI);
+                    Buffer = 123;
+                    System.Threading.Thread.Sleep(Wait);
+                } while (!CancelListen.IsCancellationRequested);
+            }));
+            tmrUpdate.Stop();
+            btnConnect.Enabled = true;
+            tbCOM.Enabled = true;
+            numBaud.Enabled = true;
+            btnDisconnect.Enabled = false;
+        }
+
+
+        private void HandleNewValues(ulong Milli, ulong Micro, int E, int I)
+        {
+            var d = new Misc.RawDataPoint(Milli, Micro, E, I);
+            lock (Data)
+            {
+                Data.Enqueue(d);
+            }
+            TotalUpdates++;
         }
 
         private void BdsShunts_ListChanged(object sender, ListChangedEventArgs e)
@@ -129,41 +180,20 @@ namespace Potentiostat
             if (e.ListChangedType == ListChangedType.ItemChanged) UpdateCurrentRangeDisplay();
         }
 
-     private string NumberToString(double v,string Unit)
-        {
-            if(Math.Abs(v)<1e-9)
-            {
-                return (v * 1e12).ToString("0.000") + " f" + Unit;
-            }
-            else if (Math.Abs(v) < 1e-6)
-            {
-                return (v * 1e9).ToString("0.000") + " n" + Unit;
-            }
-            else if (Math.Abs(v) < 1e-3)
-            {
-                return (v * 1e6).ToString("0.000") + " µ" + Unit;
-            }
-            else if (Math.Abs(v) < 1)
-            {
-                return (v * 1e3).ToString("0.000") + " m" + Unit;
-            }
-            else
-            {
-                return v.ToString("0.000");
-            }
-        }
+
 
         private void UpdateCurrentRangeDisplay()
         {
-            if(this.InvokeRequired)
+            if (this.InvokeRequired)
             {
                 this.Invoke(new Action(() => UpdateCurrentRangeDisplay()));
                 return;
             }
             var CurrentRange = Program.Settings.GetCurrentRange();
             var res = Program.Settings.GetCurrentResolution();
-            tslCurrentRange.Text = NumberToString(CurrentRange.Item1, "A") + " -> " + NumberToString(CurrentRange.Item2, "A") + " @ " + NumberToString(res, "A");
+            tslCurrentRange.Text = Misc.NumberToString(CurrentRange.Item1, "A") + " -> " + Misc.NumberToString(CurrentRange.Item2, "A") + " @ " + Misc.NumberToString(res, "A");
         }
+
         private void UpdateBufferDisplay(int Buffer)
         {
             if (this.InvokeRequired)
@@ -176,7 +206,14 @@ namespace Potentiostat
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
-            Connect(tbCOM.Text,(int)numBaud.Value);
+            if (!cbSim.Checked)
+            {
+                Connect(tbCOM.Text, (int)numBaud.Value);
+            }
+            else
+            {
+                SimConnect(10);
+            }
         }
 
         private void btnDisconnect_Click(object sender, EventArgs e)
@@ -186,11 +223,167 @@ namespace Potentiostat
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (CancelListen != null  && CancelListen.IsCancellationRequested == false)
+            if (CancelListen != null && CancelListen.IsCancellationRequested == false)
             {
                 MessageBox.Show("Please disconnect first.");
                 e.Cancel = true;
             }
+            Potentiostat.Properties.Settings.Default.Baud = (int)numBaud.Value;
+            Potentiostat.Properties.Settings.Default.COM = tbCOM.Text;
+            Potentiostat.Properties.Settings.Default.LogPath = tbLogPath.Text;
+            Potentiostat.Properties.Settings.Default.Save();
+        }
+
+        private void tmrUpdate_Tick(object sender, EventArgs e)
+        {
+            tmrUpdate.Stop();
+            Tuple<double,double> d = null;
+            double avgDate = 0.0;
+            double dE = 0.0;
+            lock (Data)
+            {
+                if (DoLog)
+                {
+                    try
+                    {
+                        if (!File.Exists(LogPath)) File.AppendAllLines(LogPath, new string[] { "Timestap / s\tVoltage / V\tCurrent / A" });
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+
+                //Add all data to the chart
+                chart1.BeginUpdate();
+                var sb = new System.Text.StringBuilder();
+                while (Data.Count > 0)
+                {
+                    var td = Data.Dequeue();
+                    var thisE = Program.Settings.GetVoltage(td.E);
+                    var thisI = Program.Settings.GetCurrent(td.I);
+                    AverageBuffer.Enqueue(Tuple.Create(td.Time,thisE,thisI));
+                    if (DoLog)
+                    {
+                        var logE = thisE;
+                        var logI = thisI;
+                        sb.AppendLine(td.Time.ToString() + "\t" + logE.ToString() + "\t" + logI.ToString());
+                    }
+                    if (AverageBuffer.Count() > Program.Settings.Averaging) AverageBuffer.Dequeue();
+                    var avgE = AverageBuffer.Select(value => value.Item2).Average();
+                    var avgI = AverageBuffer.Select(value => value.Item3).Average();
+                    avgDate = AverageBuffer.Select(value => value.Item1).Average();
+                    dE = GetdEdt(AverageBuffer);
+                    d = Tuple.Create(avgE, avgI);
+                    var realE = avgE;
+                    var realI = avgI;
+
+                    if (chart1.Series["Volt"].Datapoints.Count() < 1 || avgDate - chart1.Series["Volt"].Datapoints.Last().X > 5 / 1000.0)
+                    {
+                        chart1.Series["Volt"].AddXY(avgDate, realE);
+                        chart1.Series["Current"].AddXY(avgDate, realI);
+                        if (chart1.Series["Volt"].Datapoints.Count() > 5000) chart1.Series["Volt"].RemoveAt(0);
+                        if (chart1.Series["Current"].Datapoints.Count() > 5000) chart1.Series["Current"].RemoveAt(0);
+                    }
+
+                }
+                if (DoLog)
+                {
+                    try
+                    {
+                        File.AppendAllText(LogPath, sb.ToString());
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+                chart1.EndUpdate();
+            }
+            lblVoltage.Text = Misc.NumberToString(d.Item1, "V");
+            lblCurrent.Text = Misc.NumberToString(d.Item2, "A");
+            lbldEdt.Text = Misc.NumberToString(dE, "V/s");
+            tslBuffer.Text = Buffer.ToString();
+            tslUpdates.Text = TotalUpdates.ToString();
+            tmrUpdate.Start();
+        }
+
+        private double GetdEdt(IEnumerable<Tuple<double,double,double>> Data)
+        {
+            var datalist = Data.ToList();
+            var elist = new List<double>();
+            var tlist = new List<double>();
+            for (int i = 0; i < Data.Count(); i++)
+            {
+                var E = datalist[i].Item2;
+                elist.Add(E);
+                var x1 = datalist[i].Item1;
+                tlist.Add(x1);
+            }
+            var avgE = elist.Average();
+            var avgt=tlist.Average();
+
+            double sum1 = 0.0;
+            double sum2 = 0.0;
+            
+            for (int i = 0; i < Data.Count(); i++)
+            {
+                sum1 += (tlist[i] - avgt) * (elist[i] - avgE);
+                sum2 += (tlist[i] - avgt) * (tlist[i] - avgt);
+            }
+            return sum1/sum2;
+        }
+
+        private void btnBrowseLog_Click(object sender, EventArgs e)
+        {
+            using (FolderBrowserDialog sfd = new FolderBrowserDialog())
+            {
+                if (sfd.ShowDialog(this) == DialogResult.Cancel) return;
+                tbLogPath.Text = sfd.SelectedPath;
+            }
+        }
+
+        private void btnStartLog_Click(object sender, EventArgs e)
+        {
+            tbLogPath.Enabled = false;
+            btnBrowseLog.Enabled = false;
+            btnStartLog.Enabled = false;
+            btnStopLog.Enabled = true;
+            btnClearLog.Enabled = true;
+            LogPath = GetLogfilename(tbLogPath.Text);
+            DoLog = true;
+        }
+        private string GetLogfilename(string path)
+        {
+            int counter = 0;
+            while (File.Exists(Path.Combine(path, "PLog_" + counter.ToString("0000") + ".txt")))
+            {
+                counter++;
+            }
+            return Path.Combine(path, "PLog_" + counter.ToString("0000") + ".txt");
+        }
+        private void btnStopLog_Click(object sender, EventArgs e)
+        {
+            DoLog = false;
+
+            tbLogPath.Enabled = true;
+            btnBrowseLog.Enabled = true;
+            btnStartLog.Enabled = true;
+            btnStopLog.Enabled = false;
+            btnClearLog.Enabled = false;
+            LogPath = tbLogPath.Text;
+        }
+
+        private void btnClearLog_Click(object sender, EventArgs e)
+        {
+            if (!DoLog) return;
+            DoLog = false;
+            LogPath = GetLogfilename(tbLogPath.Text);
+            DoLog = true;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            chart1.Series["Volt"].ClearData();
+            chart1.Series["Current"].ClearData();
         }
     }
 }
