@@ -11,5 +11,14 @@
     <Setting Name="LogPath" Type="System.String" Scope="User">
       <Value Profile="(Default)">C:\Potentiostat</Value>
     </Setting>
+    <Setting Name="VoltageCalim" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.996063</Value>
+    </Setting>
+    <Setting Name="VoltageCalib" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">-0.011062508</Value>
+    </Setting>
+    <Setting Name="AverageWindow" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">200</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

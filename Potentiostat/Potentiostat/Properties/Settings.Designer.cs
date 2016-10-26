@@ -58,5 +58,41 @@ namespace Potentiostat.Properties {
                 this["LogPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.996063")]
+        public double VoltageCalim {
+            get {
+                return ((double)(this["VoltageCalim"]));
+            }
+            set {
+                this["VoltageCalim"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-0.011062508")]
+        public double VoltageCalib {
+            get {
+                return ((double)(this["VoltageCalib"]));
+            }
+            set {
+                this["VoltageCalib"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("200")]
+        public int AverageWindow {
+            get {
+                return ((int)(this["AverageWindow"]));
+            }
+            set {
+                this["AverageWindow"] = value;
+            }
+        }
     }
 }

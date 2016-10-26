@@ -23,7 +23,20 @@ namespace Potentiostat
         private System.Threading.CancellationTokenSource CancelListen;
         private int TotalUpdates = 0;
         private string LogPath;
-        private bool DoLog;
+
+        private bool _DoLog;
+        private bool DoLog
+        {
+            get
+            {
+                return _DoLog;
+            }
+            set
+            {
+                _DoLog = value;
+                if(value) SetLogpathDisplay(LogPath); else SetLogpathDisplay(null);
+            }
+        }
 
         private Queue<Misc.RawDataPoint> Data;
         private Queue<Tuple<double,double,double>> AverageBuffer;
@@ -52,6 +65,7 @@ namespace Potentiostat
             dataGridView1.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
             Data = new Queue<Misc.RawDataPoint>();
             AverageBuffer = new  Queue<Tuple<double,double, double>>();
+            DoLog = false;
         }
 
         private void DataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)
@@ -343,6 +357,11 @@ namespace Potentiostat
 
         private void btnStartLog_Click(object sender, EventArgs e)
         {
+            if(!Directory.Exists(tbLogPath.Text))
+            {
+                MessageBox.Show("Path does not exist!");
+                return;
+            }
             tbLogPath.Enabled = false;
             btnBrowseLog.Enabled = false;
             btnStartLog.Enabled = false;
@@ -384,6 +403,11 @@ namespace Potentiostat
         {
             chart1.Series["Volt"].ClearData();
             chart1.Series["Current"].ClearData();
+        }
+
+        private void SetLogpathDisplay(string path)
+        {
+            if (path == null) tslLogWhere.Text = "Not logging."; else tslLogWhere.Text = path;
         }
     }
 }

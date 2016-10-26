@@ -18,9 +18,18 @@ namespace Potentiostat
         static void Main()
         {
             Settings = new Settings();
+            Settings.Averaging = Potentiostat.Properties.Settings.Default.AverageWindow;
+            Settings.VoltageCalibm = Potentiostat.Properties.Settings.Default.VoltageCalim;
+            Settings.VoltageCalibb = Potentiostat.Properties.Settings.Default.VoltageCalib;
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new frmMain());
+
+            Potentiostat.Properties.Settings.Default.AverageWindow = Settings.Averaging;
+            Potentiostat.Properties.Settings.Default.VoltageCalim= Settings.VoltageCalibm;
+            Potentiostat.Properties.Settings.Default.VoltageCalib=Settings.VoltageCalibb;
+            Potentiostat.Properties.Settings.Default.Save();
         }
     }
 }
