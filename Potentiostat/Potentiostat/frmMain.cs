@@ -23,7 +23,7 @@ namespace Potentiostat
         private System.Threading.CancellationTokenSource CancelListen;
         private int TotalUpdates = 0;
         private string LogPath;
-
+        private string Command;
         private bool _DoLog;
         private bool DoLog
         {
@@ -66,6 +66,8 @@ namespace Potentiostat
             Data = new Queue<Misc.RawDataPoint>();
             AverageBuffer = new  Queue<Tuple<double,double, double>>();
             DoLog = false;
+            propertyGrid1.SelectedObject = Program.Settings;
+            Command = null;
         }
 
         private void DataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)
@@ -110,6 +112,11 @@ namespace Potentiostat
                     Port.ReadTimeout = 10000;
                     do
                     {
+                        if (Command != null)
+                        {
+                            Port.WriteLine(Command);
+                            Command = null;
+                        }
                         var line = Port.ReadLine();
                         if (!rx.IsMatch(line))
                         {
@@ -282,7 +289,8 @@ namespace Potentiostat
                         var logI = thisI;
                         sb.AppendLine(td.Time.ToString() + "\t" + logE.ToString() + "\t" + logI.ToString());
                     }
-                    if (AverageBuffer.Count() > Program.Settings.Averaging) AverageBuffer.Dequeue();
+                    while(AverageBuffer.Count() > Program.Settings.Averaging) AverageBuffer.Dequeue();
+                    
                     var avgE = AverageBuffer.Select(value => value.Item2).Average();
                     var avgI = AverageBuffer.Select(value => value.Item3).Average();
                     avgDate = AverageBuffer.Select(value => value.Item1).Average();
@@ -312,11 +320,14 @@ namespace Potentiostat
                 }
                 chart1.EndUpdate();
             }
-            lblVoltage.Text = Misc.NumberToString(d.Item1, "V");
-            lblCurrent.Text = Misc.NumberToString(d.Item2, "A");
-            lbldEdt.Text = Misc.NumberToString(dE, "V/s");
-            tslBuffer.Text = Buffer.ToString();
-            tslUpdates.Text = TotalUpdates.ToString();
+            if (d != null)
+            {
+                lblVoltage.Text = Misc.NumberToString(d.Item1, "V");
+                lblCurrent.Text = Misc.NumberToString(d.Item2, "A");
+                lbldEdt.Text = Misc.NumberToString(dE, "V/s");
+                tslBuffer.Text = Buffer.ToString();
+                tslUpdates.Text = TotalUpdates.ToString();
+            }
             tmrUpdate.Start();
         }
 
@@ -408,6 +419,16 @@ namespace Potentiostat
         private void SetLogpathDisplay(string path)
         {
             if (path == null) tslLogWhere.Text = "Not logging."; else tslLogWhere.Text = path;
+        }
+
+        private void btnSetHigh_Click(object sender, EventArgs e)
+        {
+            Command = "CEHIGH";
+        }
+
+        private void btnSetLow_Click(object sender, EventArgs e)
+        {
+            Command = "CELOW";
         }
     }
 }

@@ -38,9 +38,9 @@ namespace Potentiostat
         public double Vn;
         public VoltageDivider CurrentSenseDivider;
         public VoltageDivider WEVoltSenseDivider;
-        public int Averaging;
-        public double VoltageCalibm;
-        public double VoltageCalibb;
+        public int Averaging { get; set; }
+        public double VoltageCalibm { get; set; }
+        public double VoltageCalibb { get; set; }
 
         public Tuple<double,double> GetCurrentRange()
         {

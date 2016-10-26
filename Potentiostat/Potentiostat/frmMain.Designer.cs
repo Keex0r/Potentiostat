@@ -37,6 +37,8 @@
             this.tslBuffer = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel3 = new System.Windows.Forms.ToolStripStatusLabel();
             this.tslUpdates = new System.Windows.Forms.ToolStripStatusLabel();
+            this.toolStripStatusLabel4 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tslLogWhere = new System.Windows.Forms.ToolStripStatusLabel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
@@ -65,8 +67,9 @@
             this.btnClearLog = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.tmrUpdate = new System.Windows.Forms.Timer(this.components);
-            this.toolStripStatusLabel4 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.tslLogWhere = new System.Windows.Forms.ToolStripStatusLabel();
+            this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
+            this.btnSetHigh = new System.Windows.Forms.Button();
+            this.btnSetLow = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -87,7 +90,7 @@
             this.dataGridView1.Location = new System.Drawing.Point(13, 26);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.RowHeadersVisible = false;
-            this.dataGridView1.Size = new System.Drawing.Size(260, 111);
+            this.dataGridView1.Size = new System.Drawing.Size(260, 84);
             this.dataGridView1.TabIndex = 0;
             // 
             // statusStrip1
@@ -147,6 +150,20 @@
             this.tslUpdates.Size = new System.Drawing.Size(13, 19);
             this.tslUpdates.Text = "0";
             // 
+            // toolStripStatusLabel4
+            // 
+            this.toolStripStatusLabel4.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
+            this.toolStripStatusLabel4.BorderStyle = System.Windows.Forms.Border3DStyle.Etched;
+            this.toolStripStatusLabel4.Name = "toolStripStatusLabel4";
+            this.toolStripStatusLabel4.Size = new System.Drawing.Size(72, 19);
+            this.toolStripStatusLabel4.Text = "Logging to:";
+            // 
+            // tslLogWhere
+            // 
+            this.tslLogWhere.Name = "tslLogWhere";
+            this.tslLogWhere.Size = new System.Drawing.Size(36, 19);
+            this.tslLogWhere.Text = "None";
+            // 
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 2;
@@ -158,16 +175,18 @@
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel3, 0, 3);
             this.tableLayoutPanel1.Controls.Add(this.chart1, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel4, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.propertyGrid1, 0, 5);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.Padding = new System.Windows.Forms.Padding(10);
-            this.tableLayoutPanel1.RowCount = 5;
+            this.tableLayoutPanel1.RowCount = 6;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 36.4946F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 63.5054F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(812, 560);
             this.tableLayoutPanel1.TabIndex = 3;
             // 
@@ -193,7 +212,7 @@
             this.tableLayoutPanel2.Controls.Add(this.numBaud, 1, 1);
             this.tableLayoutPanel2.Controls.Add(this.btnDisconnect, 1, 2);
             this.tableLayoutPanel2.Controls.Add(this.cbSim, 0, 3);
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(13, 143);
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(13, 116);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 4;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -290,7 +309,7 @@
             this.tableLayoutPanel3.Controls.Add(this.label5, 0, 1);
             this.tableLayoutPanel3.Controls.Add(this.lblVoltage, 1, 0);
             this.tableLayoutPanel3.Controls.Add(this.label8, 0, 2);
-            this.tableLayoutPanel3.Location = new System.Drawing.Point(13, 253);
+            this.tableLayoutPanel3.Location = new System.Drawing.Point(13, 226);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             this.tableLayoutPanel3.RowCount = 3;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
@@ -397,7 +416,7 @@
             this.chart1.RightMouseFunctionalityEnabled = true;
             this.tableLayoutPanel1.SetRowSpan(this.chart1, 4);
             this.chart1.ScaleProportional = false;
-            this.chart1.Size = new System.Drawing.Size(520, 521);
+            this.chart1.Size = new System.Drawing.Size(520, 396);
             this.chart1.TabIndex = 4;
             this.chart1.Text = "chart1";
             this.chart1.TopLeftColor = System.Drawing.Color.White;
@@ -418,7 +437,9 @@
             this.tableLayoutPanel4.Controls.Add(this.btnBrowseLog, 2, 1);
             this.tableLayoutPanel4.Controls.Add(this.btnClearLog, 0, 3);
             this.tableLayoutPanel4.Controls.Add(this.button1, 1, 3);
-            this.tableLayoutPanel4.Location = new System.Drawing.Point(13, 349);
+            this.tableLayoutPanel4.Controls.Add(this.btnSetHigh, 2, 2);
+            this.tableLayoutPanel4.Controls.Add(this.btnSetLow, 2, 3);
+            this.tableLayoutPanel4.Location = new System.Drawing.Point(13, 322);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
             this.tableLayoutPanel4.RowCount = 4;
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -512,19 +533,34 @@
             // 
             this.tmrUpdate.Tick += new System.EventHandler(this.tmrUpdate_Tick);
             // 
-            // toolStripStatusLabel4
+            // propertyGrid1
             // 
-            this.toolStripStatusLabel4.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
-            this.toolStripStatusLabel4.BorderStyle = System.Windows.Forms.Border3DStyle.Etched;
-            this.toolStripStatusLabel4.Name = "toolStripStatusLabel4";
-            this.toolStripStatusLabel4.Size = new System.Drawing.Size(72, 19);
-            this.toolStripStatusLabel4.Text = "Logging to:";
+            this.propertyGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.propertyGrid1.HelpVisible = false;
+            this.propertyGrid1.Location = new System.Drawing.Point(13, 428);
+            this.propertyGrid1.Name = "propertyGrid1";
+            this.propertyGrid1.Size = new System.Drawing.Size(260, 119);
+            this.propertyGrid1.TabIndex = 6;
             // 
-            // tslLogWhere
+            // btnSetHigh
             // 
-            this.tslLogWhere.Name = "tslLogWhere";
-            this.tslLogWhere.Size = new System.Drawing.Size(36, 19);
-            this.tslLogWhere.Text = "None";
+            this.btnSetHigh.Location = new System.Drawing.Point(190, 45);
+            this.btnSetHigh.Name = "btnSetHigh";
+            this.btnSetHigh.Size = new System.Drawing.Size(22, 23);
+            this.btnSetHigh.TabIndex = 8;
+            this.btnSetHigh.Text = "^";
+            this.btnSetHigh.UseVisualStyleBackColor = true;
+            this.btnSetHigh.Click += new System.EventHandler(this.btnSetHigh_Click);
+            // 
+            // btnSetLow
+            // 
+            this.btnSetLow.Location = new System.Drawing.Point(190, 74);
+            this.btnSetLow.Name = "btnSetLow";
+            this.btnSetLow.Size = new System.Drawing.Size(22, 23);
+            this.btnSetLow.TabIndex = 9;
+            this.btnSetLow.Text = "v";
+            this.btnSetLow.UseVisualStyleBackColor = true;
+            this.btnSetLow.Click += new System.EventHandler(this.btnSetLow_Click);
             // 
             // frmMain
             // 
@@ -594,6 +630,9 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel4;
         private System.Windows.Forms.ToolStripStatusLabel tslLogWhere;
+        private System.Windows.Forms.PropertyGrid propertyGrid1;
+        private System.Windows.Forms.Button btnSetHigh;
+        private System.Windows.Forms.Button btnSetLow;
     }
 }
 
