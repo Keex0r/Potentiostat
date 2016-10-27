@@ -1,0 +1,48 @@
+unsigned long milli;
+unsigned long micro;
+//int msgcount;
+//String msg;
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(A3,INPUT);
+  pinMode(A8,INPUT);
+  Serial.begin(230400);
+  //Serial.begin(2000000);
+//  msgcount=0;
+//  msg="";
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  while(Serial.available() > 0) 
+  {
+    String line = Serial.readStringUntil('\n');
+    if(line=="CEHIGH") digitalWrite(3,HIGH);
+    if(line=="CELOW") digitalWrite(3,LOW);
+  }
+  
+  int WE = analogRead(A3);
+  int Cu = analogRead(A8);
+  milli=millis();
+  micro=micros()-milli*1000;
+
+  String msg;
+  msg+= "m";
+  msg+= milli;
+  msg+= "u";
+  msg+= micro;
+  msg+= "E";
+  msg+= WE;
+  msg+= "I";
+  msg+= Cu;
+  msg+="\n";
+    Serial.print(msg);
+//  msgcount++;
+//  if(msgcount=1) 
+//  { 
+//    Serial.print(msg);
+//    msgcount=0;
+//    msg="";
+//  }
+}
