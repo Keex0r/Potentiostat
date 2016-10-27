@@ -94,5 +94,65 @@ namespace Potentiostat.Properties {
                 this["AverageWindow"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("4.3")]
+        public double EThreshP {
+            get {
+                return ((double)(this["EThreshP"]));
+            }
+            set {
+                this["EThreshP"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-4.3")]
+        public double EThreshN {
+            get {
+                return ((double)(this["EThreshN"]));
+            }
+            set {
+                this["EThreshN"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("95")]
+        public double IThreshP {
+            get {
+                return ((double)(this["IThreshP"]));
+            }
+            set {
+                this["IThreshP"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("95")]
+        public double IThreshN {
+            get {
+                return ((double)(this["IThreshN"]));
+            }
+            set {
+                this["IThreshN"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("R2")]
+        public string ActiveShunts {
+            get {
+                return ((string)(this["ActiveShunts"]));
+            }
+            set {
+                this["ActiveShunts"] = value;
+            }
+        }
     }
 }

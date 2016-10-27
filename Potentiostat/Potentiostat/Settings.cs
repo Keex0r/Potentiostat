@@ -18,6 +18,10 @@ namespace Potentiostat
             CurrentSenseDivider = new VoltageDivider(Vp, 10000.0, 9980.0);
             WEVoltSenseDivider = new VoltageDivider(Vp, 9980.0, 9970.0);
             Averaging = 100;
+            VoltageThresholdN = -4.0;
+            VoltageThresholdP = 4.0;
+            CurrentThresholdNPerc = 95;
+            CurrentThresholdPPerc = 95;
         }
 
         private void AddShunts()
@@ -41,6 +45,10 @@ namespace Potentiostat
         public int Averaging { get; set; }
         public double VoltageCalibm { get; set; }
         public double VoltageCalibb { get; set; }
+        public double VoltageThresholdP { get; set; }
+        public double VoltageThresholdN { get; set; }
+        public double CurrentThresholdPPerc { get; set; }
+        public double CurrentThresholdNPerc { get; set; }
 
         public Tuple<double,double> GetCurrentRange()
         {

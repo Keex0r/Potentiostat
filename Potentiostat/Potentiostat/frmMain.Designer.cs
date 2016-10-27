@@ -66,10 +66,12 @@
             this.btnBrowseLog = new System.Windows.Forms.Button();
             this.btnClearLog = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
-            this.tmrUpdate = new System.Windows.Forms.Timer(this.components);
-            this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             this.btnSetHigh = new System.Windows.Forms.Button();
             this.btnSetLow = new System.Windows.Forms.Button();
+            this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
+            this.tmrUpdate = new System.Windows.Forms.Timer(this.components);
+            this.tslILimit = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tslELimit = new System.Windows.Forms.ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -103,7 +105,9 @@
             this.toolStripStatusLabel3,
             this.tslUpdates,
             this.toolStripStatusLabel4,
-            this.tslLogWhere});
+            this.tslLogWhere,
+            this.tslELimit,
+            this.tslILimit});
             this.statusStrip1.Location = new System.Drawing.Point(0, 560);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(812, 24);
@@ -529,19 +533,6 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // tmrUpdate
-            // 
-            this.tmrUpdate.Tick += new System.EventHandler(this.tmrUpdate_Tick);
-            // 
-            // propertyGrid1
-            // 
-            this.propertyGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.propertyGrid1.HelpVisible = false;
-            this.propertyGrid1.Location = new System.Drawing.Point(13, 428);
-            this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(260, 119);
-            this.propertyGrid1.TabIndex = 6;
-            // 
             // btnSetHigh
             // 
             this.btnSetHigh.Location = new System.Drawing.Point(190, 45);
@@ -561,6 +552,41 @@
             this.btnSetLow.Text = "v";
             this.btnSetLow.UseVisualStyleBackColor = true;
             this.btnSetLow.Click += new System.EventHandler(this.btnSetLow_Click);
+            // 
+            // propertyGrid1
+            // 
+            this.propertyGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.propertyGrid1.HelpVisible = false;
+            this.propertyGrid1.Location = new System.Drawing.Point(13, 428);
+            this.propertyGrid1.Name = "propertyGrid1";
+            this.propertyGrid1.Size = new System.Drawing.Size(260, 119);
+            this.propertyGrid1.TabIndex = 6;
+            // 
+            // tmrUpdate
+            // 
+            this.tmrUpdate.Tick += new System.EventHandler(this.tmrUpdate_Tick);
+            // 
+            // tslILimit
+            // 
+            this.tslILimit.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
+            this.tslILimit.BorderStyle = System.Windows.Forms.Border3DStyle.Etched;
+            this.tslILimit.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.tslILimit.ForeColor = System.Drawing.Color.Red;
+            this.tslILimit.Name = "tslILimit";
+            this.tslILimit.Size = new System.Drawing.Size(62, 19);
+            this.tslILimit.Text = "I LIMIT!!!";
+            this.tslILimit.Visible = false;
+            // 
+            // tslELimit
+            // 
+            this.tslELimit.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
+            this.tslELimit.BorderStyle = System.Windows.Forms.Border3DStyle.Etched;
+            this.tslELimit.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.tslELimit.ForeColor = System.Drawing.Color.Red;
+            this.tslELimit.Name = "tslELimit";
+            this.tslELimit.Size = new System.Drawing.Size(64, 19);
+            this.tslELimit.Text = "E LIMIT!!!";
+            this.tslELimit.Visible = false;
             // 
             // frmMain
             // 
@@ -633,6 +659,8 @@
         private System.Windows.Forms.PropertyGrid propertyGrid1;
         private System.Windows.Forms.Button btnSetHigh;
         private System.Windows.Forms.Button btnSetLow;
+        private System.Windows.Forms.ToolStripStatusLabel tslELimit;
+        private System.Windows.Forms.ToolStripStatusLabel tslILimit;
     }
 }
 

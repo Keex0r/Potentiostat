@@ -20,5 +20,20 @@
     <Setting Name="AverageWindow" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">200</Value>
     </Setting>
+    <Setting Name="EThreshP" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">4.3</Value>
+    </Setting>
+    <Setting Name="EThreshN" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">-4.3</Value>
+    </Setting>
+    <Setting Name="IThreshP" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">95</Value>
+    </Setting>
+    <Setting Name="IThreshN" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">95</Value>
+    </Setting>
+    <Setting Name="ActiveShunts" Type="System.String" Scope="User">
+      <Value Profile="(Default)">R2</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

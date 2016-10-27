@@ -21,6 +21,12 @@ namespace Potentiostat
             Settings.Averaging = Potentiostat.Properties.Settings.Default.AverageWindow;
             Settings.VoltageCalibm = Potentiostat.Properties.Settings.Default.VoltageCalim;
             Settings.VoltageCalibb = Potentiostat.Properties.Settings.Default.VoltageCalib;
+            Settings.VoltageThresholdP = Potentiostat.Properties.Settings.Default.EThreshP;
+            Settings.VoltageThresholdN = Potentiostat.Properties.Settings.Default.EThreshN;
+            Settings.CurrentThresholdPPerc = Potentiostat.Properties.Settings.Default.IThreshP;
+            Settings.CurrentThresholdNPerc = Potentiostat.Properties.Settings.Default.IThreshN;
+            var ShuntsToActive = Potentiostat.Properties.Settings.Default.ActiveShunts.Split('|');
+            foreach (var s in Settings.Shunts) s.Active = ShuntsToActive.Contains(s.Name);
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -29,6 +35,12 @@ namespace Potentiostat
             Potentiostat.Properties.Settings.Default.AverageWindow = Settings.Averaging;
             Potentiostat.Properties.Settings.Default.VoltageCalim= Settings.VoltageCalibm;
             Potentiostat.Properties.Settings.Default.VoltageCalib=Settings.VoltageCalibb;
+             Potentiostat.Properties.Settings.Default.EThreshP= Settings.VoltageThresholdP;
+            Potentiostat.Properties.Settings.Default.EThreshN=Settings.VoltageThresholdN;
+            Potentiostat.Properties.Settings.Default.IThreshP=Settings.CurrentThresholdPPerc;
+            Potentiostat.Properties.Settings.Default.IThreshN=Settings.CurrentThresholdNPerc;
+            var activeshunts = Settings.Shunts.Where(s => s.Active).Select(s => s.Name);
+            Potentiostat.Properties.Settings.Default.ActiveShunts = string.Join("|", activeshunts);
             Potentiostat.Properties.Settings.Default.Save();
         }
     }

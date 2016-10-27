@@ -201,7 +201,26 @@ namespace Potentiostat
             if (e.ListChangedType == ListChangedType.ItemChanged) UpdateCurrentRangeDisplay();
         }
 
-
+        private void SetELimit(bool state)
+        {
+            if (state == tslELimit.Visible) return;
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => SetELimit(state)));
+                return;
+            }
+            tslELimit.Visible = state;
+        }
+        private void SetILimit(bool state)
+        {
+            if (state == tslILimit.Visible) return;
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => SetILimit(state)));
+                return;
+            }
+            tslILimit.Visible = state;
+        }
 
         private void UpdateCurrentRangeDisplay()
         {
@@ -282,6 +301,23 @@ namespace Potentiostat
                     var td = Data.Dequeue();
                     var thisE = Program.Settings.GetVoltage(td.E);
                     var thisI = Program.Settings.GetCurrent(td.I);
+                    //Check thresholds
+                    var DoContinue = false;
+                    if (thisE > Program.Settings.VoltageThresholdP || thisE < Program.Settings.VoltageThresholdN)
+                    {
+                        SetELimit(true);
+                        DoContinue = true;
+                    }
+                    else SetELimit(false);
+
+                    var range = Program.Settings.GetCurrentRange();
+                    if (thisI < Program.Settings.CurrentThresholdNPerc / 100.0 * range.Item1 || thisI > Program.Settings.CurrentThresholdPPerc / 100.0 * range.Item2)
+                    {
+                        SetILimit(true);
+                        DoContinue = true;
+                    }
+                    else SetILimit(false);
+                    if (DoContinue) continue;
                     AverageBuffer.Enqueue(Tuple.Create(td.Time,thisE,thisI));
                     if (DoLog)
                     {
