@@ -21,6 +21,7 @@ namespace Potentiostat
         public BindingSource bdsShunts;
 
         private string LogPath;
+        private double LastLogEntry;
         private bool _DoLog;
         private bool DoLog
         {
@@ -241,11 +242,12 @@ namespace Potentiostat
                     else SetILimit(false);
                     if (DoContinue) continue;
                     AverageBuffer.Enqueue(Tuple.Create(td.Time,thisE,thisI));
-                    if (DoLog)
+                    if (DoLog && (td.Time-LastLogEntry) * 1000 > Program.Settings.LogDelay)
                     {
                         var logE = thisE;
                         var logI = thisI;
                         sb.AppendLine(td.Time.ToString() + "\t" + logE.ToString() + "\t" + logI.ToString());
+                        LastLogEntry = td.Time;
                     }
                     while(AverageBuffer.Count() > Program.Settings.Averaging) AverageBuffer.Dequeue();
                     

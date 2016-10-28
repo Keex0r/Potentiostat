@@ -154,5 +154,29 @@ namespace Potentiostat.Properties {
                 this["ActiveShunts"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double CurrentCalibb {
+            get {
+                return ((double)(this["CurrentCalibb"]));
+            }
+            set {
+                this["CurrentCalibb"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public double CurrentCalibm {
+            get {
+                return ((double)(this["CurrentCalibm"]));
+            }
+            set {
+                this["CurrentCalibm"] = value;
+            }
+        }
     }
 }

@@ -22,6 +22,7 @@ namespace Potentiostat
             VoltageThresholdP = 4.0;
             CurrentThresholdNPerc = 95;
             CurrentThresholdPPerc = 95;
+            LogDelay = 0;
         }
 
         private void AddShunts()
@@ -45,11 +46,13 @@ namespace Potentiostat
         public int Averaging { get; set; }
         public double VoltageCalibm { get; set; }
         public double VoltageCalibb { get; set; }
+        public double CurrentCalibm { get; set; }
+        public double CurrentCalibb { get; set; }
         public double VoltageThresholdP { get; set; }
         public double VoltageThresholdN { get; set; }
         public double CurrentThresholdPPerc { get; set; }
         public double CurrentThresholdNPerc { get; set; }
-
+        public int LogDelay { get; set; }
         public Tuple<double,double> GetCurrentRange()
         {
             var Resi = GetShuntResistance();
@@ -73,8 +76,8 @@ namespace Potentiostat
         {
             var E = AnalogValue / 1023.0 * Vp;
             var Ereal = CurrentSenseDivider.GetVIn(E);
-            return Ereal / GetShuntResistance();
-
+            var current= Ereal / GetShuntResistance();
+            return current * CurrentCalibm + CurrentCalibb;
         }
     }
 }
