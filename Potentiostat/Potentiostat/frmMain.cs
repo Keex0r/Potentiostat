@@ -16,14 +16,11 @@ namespace Potentiostat
 {
     public partial class frmMain : Form
     {
+        private SerialPotentiostat Device;
 
         public BindingSource bdsShunts;
-        private SerialPort Port;
-        private int Buffer = 0;
-        private System.Threading.CancellationTokenSource CancelListen;
-        private int TotalUpdates = 0;
+
         private string LogPath;
-        private string Command;
         private bool _DoLog;
         private bool DoLog
         {
@@ -67,7 +64,10 @@ namespace Potentiostat
             AverageBuffer = new  Queue<Tuple<double,double, double>>();
             DoLog = false;
             propertyGrid1.SelectedObject = Program.Settings;
-            Command = null;
+            Device = new SerialPotentiostat();
+            Device.Connected += HandleConnected;
+            Device.Disconnected += HandleDisconnect;
+            Device.NewData += HandleNewValues;
         }
 
         private void DataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)
@@ -77,107 +77,21 @@ namespace Potentiostat
                 dataGridView1.CommitEdit(DataGridViewDataErrorContexts.Commit);
             }
         }
-
-        private async void Connect(string com, int Baud)
+        private void HandleConnected(object sender, EventArgs e)
         {
-            if (Port != null && Port.IsOpen) return;
-            Port = new SerialPort(com, Baud);
-            try
-            {
-                Port.Open();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error opening serial port: " + ex.Message);
-                return;
-            }
             btnConnect.Enabled = false;
             tbCOM.Enabled = false;
             numBaud.Enabled = false;
             btnDisconnect.Enabled = true;
-            CancelListen = new System.Threading.CancellationTokenSource();
-            TotalUpdates = 0;
             chart1.Series["Volt"].ClearData();
             chart1.Series["Current"].ClearData();
             Data.Clear();
             AverageBuffer.Clear();
             tmrUpdate.Start();
-            try
-            {
-                await Task.Run(new Action(() =>
-                {
-                    var rx = new Regex("m(\\d+)u(\\d+)E(\\d+)I(\\d+)");
-                    Port.DiscardInBuffer();
-                    int fails = 0;
-                    Port.ReadTimeout = 10000;
-                    do
-                    {
-                        if (Command != null)
-                        {
-                            Port.WriteLine(Command);
-                            Command = null;
-                        }
-                        var line = Port.ReadLine();
-                        if (!rx.IsMatch(line))
-                        {
-                            fails++;
-                            if (fails > 10) throw new Exception("No matching text. Baudrate wrong?");
-                            continue;
-                        }
-                        fails = 0;
-                        var match = rx.Match(line);
-                        var thisMilli = ulong.Parse(match.Groups[1].Value);
-                        var thisMicro = ulong.Parse(match.Groups[2].Value);
-                        var thisE = int.Parse(match.Groups[3].Value);
-                        var thisI = int.Parse(match.Groups[4].Value);
-                        HandleNewValues(thisMilli, thisMicro, thisE, thisI);
-                        Buffer = Port.BytesToRead;
-                    } while (!CancelListen.IsCancellationRequested);
-                }));
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Loop error: " + ex.Message);
-            }
-            try
-            {
-                Port.Close();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error closing serial port: " + ex.Message);
-            }
-            tmrUpdate.Stop();
 
-            btnConnect.Enabled = true;
-            tbCOM.Enabled = true;
-            numBaud.Enabled = true;
-            btnDisconnect.Enabled = false;
         }
-        private async void SimConnect(int Wait)
+        private void HandleDisconnect(object sender, DisconnectedEventArgs e)
         {
-            btnConnect.Enabled = false;
-            tbCOM.Enabled = false;
-            numBaud.Enabled = false;
-            btnDisconnect.Enabled = true;
-            CancelListen = new System.Threading.CancellationTokenSource();
-            TotalUpdates = 0;
-            tmrUpdate.Start();
-            chart1.Series["Volt"].ClearData();
-            chart1.Series["Current"].ClearData();
-            var starttime = DateTime.Now;
-            await Task.Run(new Action(() =>
-            {
-                do
-                {
-                    var thisE = (int)(1023 * Math.Sin(DateTime.Now.Millisecond / 1000.0 * 2 * Math.PI));
-                    var thisI = (int)(1023 * Math.Cos(DateTime.Now.Millisecond / 1000.0 * 2 * Math.PI));
-                    var milli = (ulong)((DateTime.Now - starttime).TotalMilliseconds);
-                    HandleNewValues(milli, 0, thisE, thisI);
-                    Buffer = 123;
-                    System.Threading.Thread.Sleep(Wait);
-                } while (!CancelListen.IsCancellationRequested);
-            }));
             tmrUpdate.Stop();
             btnConnect.Enabled = true;
             tbCOM.Enabled = true;
@@ -185,15 +99,23 @@ namespace Potentiostat
             btnDisconnect.Enabled = false;
         }
 
-
-        private void HandleNewValues(ulong Milli, ulong Micro, int E, int I)
+        private void Connect(string com, int Baud)
         {
-            var d = new Misc.RawDataPoint(Milli, Micro, E, I);
+           Device.Connect(com, Baud);
+        }
+        private void SimConnect(int Wait)
+        {
+            Device.SimConnect(Wait);
+        }
+
+
+        private void HandleNewValues(object sender, NewDataEventArgs e)
+        {
+            var d = new Misc.RawDataPoint(e.millis, e.micros, e.Potential, e.Current);
             lock (Data)
             {
                 Data.Enqueue(d);
             }
-            TotalUpdates++;
         }
 
         private void BdsShunts_ListChanged(object sender, ListChangedEventArgs e)
@@ -258,12 +180,12 @@ namespace Potentiostat
 
         private void btnDisconnect_Click(object sender, EventArgs e)
         {
-            if (CancelListen != null) CancelListen.Cancel();
+            Device.Disconnect();
         }
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (CancelListen != null && CancelListen.IsCancellationRequested == false)
+            if (Device.IsConnected)
             {
                 MessageBox.Show("Please disconnect first.");
                 e.Cancel = true;
@@ -361,8 +283,8 @@ namespace Potentiostat
                 lblVoltage.Text = Misc.NumberToString(d.Item1, "V");
                 lblCurrent.Text = Misc.NumberToString(d.Item2, "A");
                 lbldEdt.Text = Misc.NumberToString(dE, "V/s");
-                tslBuffer.Text = Buffer.ToString();
-                tslUpdates.Text = TotalUpdates.ToString();
+                tslBuffer.Text = Device.Buffer.ToString();
+                tslUpdates.Text = Device.TotalUpdates.ToString();
             }
             tmrUpdate.Start();
         }
@@ -459,12 +381,12 @@ namespace Potentiostat
 
         private void btnSetHigh_Click(object sender, EventArgs e)
         {
-            Command = "CEHIGH";
+            Device.ExecuteCommand("CEHIGH");
         }
 
         private void btnSetLow_Click(object sender, EventArgs e)
         {
-            Command = "CELOW";
+            Device.ExecuteCommand("CELOW");
         }
     }
 }

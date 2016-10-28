@@ -39,6 +39,8 @@
             this.tslUpdates = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel4 = new System.Windows.Forms.ToolStripStatusLabel();
             this.tslLogWhere = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tslELimit = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tslILimit = new System.Windows.Forms.ToolStripStatusLabel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
@@ -70,8 +72,6 @@
             this.btnSetLow = new System.Windows.Forms.Button();
             this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             this.tmrUpdate = new System.Windows.Forms.Timer(this.components);
-            this.tslILimit = new System.Windows.Forms.ToolStripStatusLabel();
-            this.tslELimit = new System.Windows.Forms.ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.statusStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -167,6 +167,28 @@
             this.tslLogWhere.Name = "tslLogWhere";
             this.tslLogWhere.Size = new System.Drawing.Size(36, 19);
             this.tslLogWhere.Text = "None";
+            // 
+            // tslELimit
+            // 
+            this.tslELimit.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
+            this.tslELimit.BorderStyle = System.Windows.Forms.Border3DStyle.Etched;
+            this.tslELimit.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.tslELimit.ForeColor = System.Drawing.Color.Red;
+            this.tslELimit.Name = "tslELimit";
+            this.tslELimit.Size = new System.Drawing.Size(64, 19);
+            this.tslELimit.Text = "E LIMIT!!!";
+            this.tslELimit.Visible = false;
+            // 
+            // tslILimit
+            // 
+            this.tslILimit.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
+            this.tslILimit.BorderStyle = System.Windows.Forms.Border3DStyle.Etched;
+            this.tslILimit.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.tslILimit.ForeColor = System.Drawing.Color.Red;
+            this.tslILimit.Name = "tslILimit";
+            this.tslILimit.Size = new System.Drawing.Size(62, 19);
+            this.tslILimit.Text = "I LIMIT!!!";
+            this.tslILimit.Visible = false;
             // 
             // tableLayoutPanel1
             // 
@@ -418,9 +440,9 @@
             this.chart1.MouseWheelZoomEnabled = true;
             this.chart1.Name = "chart1";
             this.chart1.RightMouseFunctionalityEnabled = true;
-            this.tableLayoutPanel1.SetRowSpan(this.chart1, 4);
+            this.tableLayoutPanel1.SetRowSpan(this.chart1, 5);
             this.chart1.ScaleProportional = false;
-            this.chart1.Size = new System.Drawing.Size(520, 396);
+            this.chart1.Size = new System.Drawing.Size(520, 521);
             this.chart1.TabIndex = 4;
             this.chart1.Text = "chart1";
             this.chart1.TopLeftColor = System.Drawing.Color.White;
@@ -565,28 +587,6 @@
             // tmrUpdate
             // 
             this.tmrUpdate.Tick += new System.EventHandler(this.tmrUpdate_Tick);
-            // 
-            // tslILimit
-            // 
-            this.tslILimit.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
-            this.tslILimit.BorderStyle = System.Windows.Forms.Border3DStyle.Etched;
-            this.tslILimit.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.tslILimit.ForeColor = System.Drawing.Color.Red;
-            this.tslILimit.Name = "tslILimit";
-            this.tslILimit.Size = new System.Drawing.Size(62, 19);
-            this.tslILimit.Text = "I LIMIT!!!";
-            this.tslILimit.Visible = false;
-            // 
-            // tslELimit
-            // 
-            this.tslELimit.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
-            this.tslELimit.BorderStyle = System.Windows.Forms.Border3DStyle.Etched;
-            this.tslELimit.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            this.tslELimit.ForeColor = System.Drawing.Color.Red;
-            this.tslELimit.Name = "tslELimit";
-            this.tslELimit.Size = new System.Drawing.Size(64, 19);
-            this.tslELimit.Text = "E LIMIT!!!";
-            this.tslELimit.Visible = false;
             // 
             // frmMain
             // 

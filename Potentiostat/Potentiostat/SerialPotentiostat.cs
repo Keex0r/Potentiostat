@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Ports;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Potentiostat
 {
@@ -14,7 +15,7 @@ namespace Potentiostat
     {
         private int _Buffer = 0;
         private System.Threading.CancellationTokenSource CancelListen;
-        private int _TotalUpdates = 0;
+        private ulong _TotalUpdates = 0;
         private bool reallyconnected;
         private bool simconnected;
         private SerialPort Port;
@@ -25,7 +26,8 @@ namespace Potentiostat
         public delegate void DisconnectedEventHandler(object sender, DisconnectedEventArgs e);
         public event DisconnectedEventHandler Disconnected;
         public int Buffer { get { return _Buffer; } }
-        public int TotalUpdates { get { return _TotalUpdates; } }
+        public ulong TotalUpdates { get { return _TotalUpdates; } }
+        private SynchronizationContext context;
 
         public SerialPotentiostat()
         {
@@ -34,6 +36,7 @@ namespace Potentiostat
             Command = null;
             reallyconnected = false;
             simconnected = false;
+            context = SynchronizationContext.Current;
         }
 
 
@@ -65,7 +68,10 @@ namespace Potentiostat
             }
             CancelListen = new System.Threading.CancellationTokenSource();
             Task.Run(new Action(() => ReceivingLoop()));
-            Connected?.Invoke(this, new EventArgs());
+            context.Post(new SendOrPostCallback(delegate (object state)
+            {
+                Connected?.Invoke(this, new EventArgs());
+            }), null);
             return "OK";
         }
         public void Disconnect()
@@ -78,6 +84,10 @@ namespace Potentiostat
             if (IsConnected) return "Already open";
             CancelListen = new System.Threading.CancellationTokenSource();
             Task.Run(() => SimReceivingLoop(delay));
+            context.Post(new SendOrPostCallback(delegate (object state)
+            {
+                Connected?.Invoke(this, new EventArgs());
+            }), null);
             return "OK";
         }
         private void ReceivingLoop()
@@ -87,6 +97,7 @@ namespace Potentiostat
             int fails = 0;
             Port.ReadTimeout = 10000;
             reallyconnected = true;
+            _TotalUpdates = 0;
             try
             {
                 do
@@ -114,6 +125,7 @@ namespace Potentiostat
                         var thisE = int.Parse(match.Groups[3].Value);
                         var thisI = int.Parse(match.Groups[4].Value);
                         NewData?.Invoke(this, new NewDataEventArgs(thisMilli, thisMicro, thisE, thisI));
+                        _TotalUpdates++;
                     }
                     else
                     {
@@ -121,11 +133,19 @@ namespace Potentiostat
                     }
                     _Buffer = Port.BytesToRead;
                 } while (!CancelListen.IsCancellationRequested);
-                Disconnected?.Invoke(this, new DisconnectedEventArgs("Cancel"));
+                //Disconnected?.Invoke(this, new DisconnectedEventArgs("Cancel"));
+                context.Post(new SendOrPostCallback(delegate (object state)
+                {
+                    Disconnected?.Invoke(this, new DisconnectedEventArgs("Cancel"));
+                }), null);
             }
             catch (Exception ex)
             {
-                Disconnected?.Invoke(this, new DisconnectedEventArgs("Exception: " + ex.Message));
+                //Disconnected?.Invoke(this, new DisconnectedEventArgs("Exception: " + ex.Message));
+                context.Post(new SendOrPostCallback(delegate (object state)
+                {
+                    Disconnected?.Invoke(this, new DisconnectedEventArgs("Exception: " + ex.Message));
+                }), null);
             } finally
             {
                 Port?.Close();
@@ -135,6 +155,7 @@ namespace Potentiostat
         private void SimReceivingLoop(int delay)
         {
             DateTime starttime = DateTime.Now;
+            simconnected = true;
             do
             {
                 var thisE = (int)(1023 * Math.Sin(DateTime.Now.Millisecond / 1000.0 * 2 * Math.PI));
@@ -144,7 +165,12 @@ namespace Potentiostat
                 _Buffer = 123;
                 System.Threading.Thread.Sleep(delay);
             } while (!CancelListen.IsCancellationRequested);
-            Disconnected?.Invoke(this, new DisconnectedEventArgs("Cancel"));
+            simconnected = false;
+            //Disconnected?.Invoke(this, new DisconnectedEventArgs("Cancel"));
+            context.Post(new SendOrPostCallback(delegate (object state)
+            {
+                Disconnected?.Invoke(this, new DisconnectedEventArgs("Cancel"));
+            }), null);
         }
 
     }
