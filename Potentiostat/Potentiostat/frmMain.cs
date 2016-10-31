@@ -46,10 +46,18 @@ namespace Potentiostat
             numBaud.Value = Potentiostat.Properties.Settings.Default.Baud;
             tbLogPath.Text = Potentiostat.Properties.Settings.Default.LogPath;
 
-            chart1.Series.LinePenDefaultWidthY1 = 3;
-            chart1.Series.LinePenDefaultWidthY2 = 3;
-            chart1.Series.AddSeries(jwGraph.jwGraph.Series.enumSeriesType.Line, jwGraph.jwGraph.Axis.enumAxisLocation.Primary).Name = "Volt";
-            chart1.Series.AddSeries(jwGraph.jwGraph.Series.enumSeriesType.Line, jwGraph.jwGraph.Axis.enumAxisLocation.Secondary).Name = "Current";
+            chart1.Series.LinePenDefaultWidthY1 = 1;
+            chart1.Series.LinePenDefaultWidthY2 = 1;
+            var se = chart1.Series.AddSeries(jwGraph.jwGraph.Series.enumSeriesType.Line, jwGraph.jwGraph.Axis.enumAxisLocation.Primary);
+            se.Name = "Volt";
+            se.LegendText = "Voltage / V";
+            var si = chart1.Series.AddSeries(jwGraph.jwGraph.Series.enumSeriesType.Line, jwGraph.jwGraph.Axis.enumAxisLocation.Secondary);
+            si.Name = "Current";
+            si.LegendText = "Current / A";
+            chart1.XAxis.Title = "Time / s";
+            chart1.Y1Axis.Title = "Voltage / V";
+            chart1.Y2Axis.Title = "Current / A";
+            chart1.HighQuality = false;
 
             bdsShunts = new BindingSource();
             bdsShunts.DataSource = Program.Settings.Shunts;
@@ -69,6 +77,13 @@ namespace Potentiostat
             Device.Connected += HandleConnected;
             Device.Disconnected += HandleDisconnect;
             Device.NewData += HandleNewValues;
+            Device.GotSingleShot += Device_GotSingleShot;
+        }
+
+        private void Device_GotSingleShot(object sender, SingleShotEventArgs e)
+        {
+            var frm = new frmSingleShot();
+            frm.Show(e);
         }
 
         private void DataGridView1_CurrentCellDirtyStateChanged(object sender, EventArgs e)
@@ -259,12 +274,12 @@ namespace Potentiostat
                     var realE = avgE;
                     var realI = avgI;
 
-                    if (chart1.Series["Volt"].Datapoints.Count() < 1 || avgDate - chart1.Series["Volt"].Datapoints.Last().X > 5 / 1000.0)
+                    if (chart1.Series["Volt"].Datapoints.Count() < 1 || avgDate - chart1.Series["Volt"].Datapoints.Last().X > 10 / 1000.0)
                     {
                         chart1.Series["Volt"].AddXY(avgDate, realE);
                         chart1.Series["Current"].AddXY(avgDate, realI);
-                        if (chart1.Series["Volt"].Datapoints.Count() > 5000) chart1.Series["Volt"].RemoveAt(0);
-                        if (chart1.Series["Current"].Datapoints.Count() > 5000) chart1.Series["Current"].RemoveAt(0);
+                        if (chart1.Series["Volt"].Datapoints.Count() > 2500) chart1.Series["Volt"].RemoveAt(0);
+                        if (chart1.Series["Current"].Datapoints.Count() > 2500) chart1.Series["Current"].RemoveAt(0);
                     }
 
                 }
@@ -389,6 +404,11 @@ namespace Potentiostat
         private void btnSetLow_Click(object sender, EventArgs e)
         {
             Device.ExecuteCommand("CELOW");
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Device.ExecuteCommand("STARTSS");
         }
     }
 }

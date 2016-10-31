@@ -1,16 +1,51 @@
-unsigned long milli;
-unsigned long micro;
-//int msgcount;
-//String msg;
+const int ssLength=450;
+
+
 
 void setup() {
   // put your setup code here, to run once:
   pinMode(A3,INPUT);
   pinMode(A8,INPUT);
-  Serial.begin(230400);
+  pinMode(3,OUTPUT);
+  Serial.begin(230800);
   //Serial.begin(2000000);
 //  msgcount=0;
 //  msg="";
+  
+}
+
+void GetSS() {
+  //Single shot
+  int ssWE[ssLength];
+  int ssCurrent[ssLength];
+  unsigned long ssTime[ssLength];
+  unsigned long start=micros();
+  for(int i = 0; i<ssLength; i++) {
+      int WE = analogRead(A3);
+      int Cu = analogRead(A8);
+      unsigned long micro=micros()-start;
+      ssWE[i] = WE;
+      ssCurrent[i] = Cu;
+      ssTime[i] = micro;
+  }   
+  Serial.print("SSSTART\n");
+  for(int i = 0; i<ssLength; i++) {
+      String msg;
+      msg+= "m";
+      msg+= 0;
+      msg+= "u";
+      msg+= ssTime[i];
+      msg+= "E";
+      msg+= ssWE[i];
+      msg+= "I";
+      msg+= ssCurrent[i];
+      msg+="\n";
+    Serial.print(msg);
+  }
+  Serial.print("SSEND\n");
+}
+void Furz() {
+  Serial.println("FURZ");
 }
 
 void loop() {
@@ -20,12 +55,17 @@ void loop() {
     String line = Serial.readStringUntil('\n');
     if(line=="CEHIGH") digitalWrite(3,HIGH);
     if(line=="CELOW") digitalWrite(3,LOW);
-  }
+    if(line=="STARTSS") {
+      GetSS();
+      return;
+    }
+    }
+  
   
   int WE = analogRead(A3);
   int Cu = analogRead(A8);
-  milli=millis();
-  micro=micros()-milli*1000;
+  unsigned long milli=millis();
+  unsigned long micro=micros()-milli*1000;
 
   String msg;
   msg+= "m";

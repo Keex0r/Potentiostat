@@ -25,6 +25,8 @@ namespace Potentiostat
         public event EventHandler Connected;
         public delegate void DisconnectedEventHandler(object sender, DisconnectedEventArgs e);
         public event DisconnectedEventHandler Disconnected;
+        public delegate void GotSingleShotEventHander(object sender, SingleShotEventArgs e);
+        public event GotSingleShotEventHander GotSingleShot;
         public int Buffer { get { return _Buffer; } }
         public ulong TotalUpdates { get { return _TotalUpdates; } }
         private SynchronizationContext context;
@@ -112,6 +114,33 @@ namespace Potentiostat
                     if (Port.BytesToRead > 0)
                     {
                         var line = Port.ReadLine();
+                        if(line.StartsWith("SSSTART"))
+                        {
+                            //Record Single Shot
+                            List<ulong> Time = new List<ulong>();
+                            List<int> E = new List<int>();
+                            List<int> I = new List<int>();
+                            do
+                            {
+                                line = Port.ReadLine();
+                                if (rx.IsMatch(line))
+                                {
+                                    var SSmatch = rx.Match(line);
+                                    var SSthisMilli = ulong.Parse(SSmatch.Groups[1].Value);
+                                    var SSthisMicro = ulong.Parse(SSmatch.Groups[2].Value);
+                                    var SSthisE = int.Parse(SSmatch.Groups[3].Value);
+                                    var SSthisI = int.Parse(SSmatch.Groups[4].Value);
+                                    Time.Add(SSthisMicro);
+                                    E.Add(SSthisE);
+                                    I.Add(SSthisI);
+                                }
+                            } while (line != "SSEND");
+                            context.Post(new SendOrPostCallback(delegate (object state)
+                            {
+                                GotSingleShot?.Invoke(this, new SingleShotEventArgs(Time, E, I));
+                            }), null);
+                            continue;
+                        }
                         if (!rx.IsMatch(line))
                         {
                             fails++;

@@ -57,6 +57,12 @@
     <Compile Include="frmMain.Designer.cs">
       <DependentUpon>frmMain.cs</DependentUpon>
     </Compile>
+    <Compile Include="frmSingleShot.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmSingleShot.Designer.cs">
+      <DependentUpon>frmSingleShot.cs</DependentUpon>
+    </Compile>
     <Compile Include="Misc.cs" />
     <Compile Include="NewDataEventArgs.cs" />
     <Compile Include="Program.cs" />
@@ -64,9 +70,13 @@
     <Compile Include="SerialPotentiostat.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Shunt.cs" />
+    <Compile Include="SingleShotEventArgs.cs" />
     <Compile Include="VoltageDivider.cs" />
     <EmbeddedResource Include="frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmSingleShot.resx">
+      <DependentUpon>frmSingleShot.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

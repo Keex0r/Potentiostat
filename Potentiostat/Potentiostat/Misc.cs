@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Potentiostat
 {
-    class Misc
+    public class Misc
     {
         public static string NumberToString(double v, string Unit)
         {
