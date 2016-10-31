@@ -23,6 +23,8 @@ namespace Potentiostat
             CurrentThresholdNPerc = 95;
             CurrentThresholdPPerc = 95;
             LogDelay = 0;
+            DataPlotDelay = 5;
+            DataPlotMaxPoints = 2500;
         }
 
         private void AddShunts()
@@ -53,6 +55,8 @@ namespace Potentiostat
         public double CurrentThresholdPPerc { get; set; }
         public double CurrentThresholdNPerc { get; set; }
         public int LogDelay { get; set; }
+        public int DataPlotDelay { get; set; }
+        public int DataPlotMaxPoints { get; set; }
         public Tuple<double,double> GetCurrentRange()
         {
             var Resi = GetShuntResistance();

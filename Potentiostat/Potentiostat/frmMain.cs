@@ -269,17 +269,17 @@ namespace Potentiostat
                     var avgE = AverageBuffer.Select(value => value.Item2).Average();
                     var avgI = AverageBuffer.Select(value => value.Item3).Average();
                     avgDate = AverageBuffer.Select(value => value.Item1).Average();
-                    dE = GetdEdt(AverageBuffer);
+                    dE = 0;//GetdEdt(AverageBuffer);
                     d = Tuple.Create(avgE, avgI);
                     var realE = avgE;
                     var realI = avgI;
-
-                    if (chart1.Series["Volt"].Datapoints.Count() < 1 || avgDate - chart1.Series["Volt"].Datapoints.Last().X > 10 / 1000.0)
+                    var datacount = chart1.Series["Volt"].Datapoints.Count();
+                    if (datacount < 1 || avgDate - chart1.Series["Volt"].Datapoints[chart1.Series["Volt"].Datapoints.Count() - 1].X > Program.Settings.DataPlotDelay / 1000.0)
                     {
                         chart1.Series["Volt"].AddXY(avgDate, realE);
                         chart1.Series["Current"].AddXY(avgDate, realI);
-                        if (chart1.Series["Volt"].Datapoints.Count() > 2500) chart1.Series["Volt"].RemoveAt(0);
-                        if (chart1.Series["Current"].Datapoints.Count() > 2500) chart1.Series["Current"].RemoveAt(0);
+                        if (datacount+1 > Program.Settings.DataPlotMaxPoints) chart1.Series["Volt"].RemoveAt(0);
+                        if (datacount+1 > Program.Settings.DataPlotMaxPoints) chart1.Series["Current"].RemoveAt(0);
                     }
 
                 }
